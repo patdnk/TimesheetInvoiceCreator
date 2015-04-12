@@ -12,6 +12,13 @@ class Application(Frame):
         self.create_widgets()
 
     def create_widgets(self):
+
+        #todo: define string vars
+        #todo: create data picker to find out week starting day
+        #todo: implement docx library
+        #todo: create outputs of documents
+        #todo: try to write invoice module based on invoice template
+
         #header labels
         self.labelDays = Label(self, text = "Day", font = "System 12 bold")
         self.labelDays.grid(row=0)
@@ -20,6 +27,7 @@ class Application(Frame):
         self.labelOvertimeHours = Label(self, text = "Overtime\nhours", font = "System 12 bold")
         self.labelOvertimeHours.grid(row=0, column=2)
 
+        #labels and inputs
         self.labelMonday = Label(self, text = "Monday", font = "System 12")
         self.labelMonday.grid(row=1, sticky=E)
         self.entryMondayNH = Entry(self,width=2)
