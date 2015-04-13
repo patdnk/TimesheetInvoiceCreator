@@ -4,6 +4,7 @@ import sys
 import os
 import datetime
 from tkinter import *
+from decimal import Decimal
 
 # class WeekSelector(StringVar)
 #     def __init__(self):
@@ -87,6 +88,10 @@ class Application(Frame):
         self.entrySundayOH = Entry(self, width=2)
         self.entrySundayOH.grid(row=7, column=2)
 
+        self.normalHoursEntryList = [self.entryMondayNH, self.entryTuesdayNH, self.entryWednesdayNH, self.entryThursdayNH, self.entryFridayNH, self.entrySaturdayNH, self.entrySundayNH]
+        self.overtimeHoursEntryList = [self.entryMondayOH, self.entryTuesdayOH, self.entryWednesdayOH, self.entryThursdayOH, self.entryFridayOH, self.entrySaturdayOH, self.entrySundayOH]
+
+
 
         #date selection spinbox
 
@@ -96,7 +101,7 @@ class Application(Frame):
         # self.spinboxDate = Listbox(self)
         # self.spinboxDate.grid()
 
-        self.bttn2 = Button(self, text = "Get hours", command=self.getAllHoursData())
+        self.bttn2 = Button(self, text = "Get hours", command=self.getAllHoursTotals)
         self.bttn2.grid(row=8)
         #
         # self.bttn3 = Button(self)
@@ -120,13 +125,25 @@ class Application(Frame):
         print(days)
         return days
 
-    def getAllHoursData(self):
-        # normalWeekHours = int(self.entryMondayNH.get()) + int(self.entryTuesdayNH.get() + int(self.entryWednesdayNH.get()) + self.entryThursdayNH.get() + self.entryFridayNH.get() + self.entrySaturdayNH.get() + self.entrySundayNH.get()
-        # overtimeWeekHours = self.entryMondayOH.get() + self.entryTuesdayOH.get() + self.entryWednesdayOH.get() + self.entryThursdayOH.get() + self.entryFridayOH.get() + self.entrySaturdayOH.get() + self.entrySundayNH.get()
-        # print(normalWeekHours)
+    def getAllHoursTotals(self):
+
+        # normal hours total calculation with empty values check
+        self.normalWeekHours = float(0)
+        for entry in self.normalHoursEntryList:
+            if entry.get():
+                normalWeekHours += float(entry.get())
+
+        # overtime hours total calculation with empty values check
+        self.overtimeWeekHours = float(0)
+        for entry in self.overtimeHoursEntryList:
+            if entry.get():
+                overtimeWeekHours += float(entry.get())
+
+        print("Normal hours total:", normalWeekHours)
+        print("Overtime hours total:", overtimeWeekHours)
         # print(overtimeWeekHours)
-        print(self.entryMondayNH.get())
-        print("Button pressed")
+        # print(self.entryMondayNH.get())
+        # print("Button pressed")
 
 
 
