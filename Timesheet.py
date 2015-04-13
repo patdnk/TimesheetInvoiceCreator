@@ -1,10 +1,12 @@
-__author__ = 'patdynek'
+__author__ = 'patdnk'
+
 import random
 import sys
 import os
 import datetime
 from tkinter import *
-from decimal import Decimal
+# from decimal import Decimal
+from docx import *
 
 # class WeekSelector(StringVar)
 #     def __init__(self):
@@ -24,7 +26,6 @@ class Application(Frame):
 
     def create_widgets(self):
 
-        #todo: define string vars
         #todo: create data picker to find out week starting day
         #todo: implement docx library
         #todo: create outputs of documents
@@ -144,6 +145,42 @@ class Application(Frame):
         # print(overtimeWeekHours)
         # print(self.entryMondayNH.get())
         # print("Button pressed")
+
+
+    #todo create dropdown with filesystem access to get the timesheet document template
+
+    #open timesheet document
+    def openTimesheetDocumentTemplate(self):
+
+    #insert hours values
+    def insertHoursValues(self):
+
+    #insert dates -> week days from selected monday
+    def insertDates(self):
+
+    #save timesheet document
+    def saveTimeSheetDocument(self):
+
+
+    #todo create entry for hourly/day rate
+    #todo create dropdown for selection of rate period
+    #todo create dropdown with filesystem access to get the invoice document template
+
+    #open invoice document
+    def openInvoiceDocumentTemplate(self):
+
+    #insert invoice values (invoice number, invoice date, invoice description, units, unit value, total, subtotal, vat, gross total)
+    def insertInvoiceNumber(self):
+
+    def insertInvoiceDate(self):
+
+    def insertInvoiceDescription(self):
+
+    def insertInvoiceUnitValues(self):
+
+    def insertTotals(self):
+
+
 
 
 
