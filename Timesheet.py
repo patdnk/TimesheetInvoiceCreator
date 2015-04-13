@@ -75,30 +75,29 @@ class Application(Frame):
 
         self.labelSaturday = Label(self, text = "Saturday", font = "System 12", bg="lightgray")
         self.labelSaturday.grid(row=6, sticky=E)
-        self.labelSaturdayNH = Entry(self,width=2)
-        self.labelSaturdayNH.grid(row=6, column=1)
-        self.labelSaturdayOH = Entry(self,width=2)
-        self.labelSaturdayOH.grid(row=6, column=2)
+        self.entrySaturdayNH = Entry(self,width=2)
+        self.entrySaturdayNH.grid(row=6, column=1)
+        self.entrySaturdayOH = Entry(self,width=2)
+        self.entrySaturdayOH.grid(row=6, column=2)
 
         self.labelSunday = Label(self, text = "Sunday", font = "System 12", bg="lightgray")
         self.labelSunday.grid(row=7, sticky=E)
-        self.labelSundayNH = Entry(self, width=2)
-        self.labelSundayNH.grid(row=7, column=1)
-        self.labelSundayOH = Entry(self, width=2)
-        self.labelSundayOH.grid(row=7, column=2)
+        self.entrySundayNH = Entry(self, width=2)
+        self.entrySundayNH.grid(row=7, column=1)
+        self.entrySundayOH = Entry(self, width=2)
+        self.entrySundayOH.grid(row=7, column=2)
 
 
         #date selection spinbox
 
-        listboxDates = []
-        listboxDates = self.getAllMondays(2015)
+        # listboxDates = []
+        # listboxDates = self.getAllMondays(2015)
+        #
+        # self.spinboxDate = Listbox(self)
+        # self.spinboxDate.grid()
 
-        self.spinboxDate = Listbox(self)
-        self.spinboxDate.grid()
-
-        # self.bttn2 = Button(self)
-        # self.bttn2.grid()
-        # self.bttn2.configure(text = "Cancel")
+        self.bttn2 = Button(self, text = "Get hours", command=self.getAllHoursData())
+        self.bttn2.grid(row=8)
         #
         # self.bttn3 = Button(self)
         # self.bttn3.grid()
@@ -120,6 +119,16 @@ class Application(Frame):
 
         print(days)
         return days
+
+    def getAllHoursData(self):
+        # normalWeekHours = int(self.entryMondayNH.get()) + int(self.entryTuesdayNH.get() + int(self.entryWednesdayNH.get()) + self.entryThursdayNH.get() + self.entryFridayNH.get() + self.entrySaturdayNH.get() + self.entrySundayNH.get()
+        # overtimeWeekHours = self.entryMondayOH.get() + self.entryTuesdayOH.get() + self.entryWednesdayOH.get() + self.entryThursdayOH.get() + self.entryFridayOH.get() + self.entrySaturdayOH.get() + self.entrySundayNH.get()
+        # print(normalWeekHours)
+        # print(overtimeWeekHours)
+        print(self.entryMondayNH.get())
+        print("Button pressed")
+
+
 
 root = Tk()
 root.title("Timesheet App")
