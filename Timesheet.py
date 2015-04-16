@@ -5,8 +5,10 @@ import sys
 import os
 import datetime
 from tkinter import *
+# from tkFileDialog import askopenfilename
 # from decimal import Decimal
-from docx import *
+from docx import Document
+from os.path import abspath, expanduser
 
 # class WeekSelector(StringVar)
 #     def __init__(self):
@@ -92,6 +94,7 @@ class Application(Frame):
         self.normalHoursEntryList = [self.entryMondayNH, self.entryTuesdayNH, self.entryWednesdayNH, self.entryThursdayNH, self.entryFridayNH, self.entrySaturdayNH, self.entrySundayNH]
         self.overtimeHoursEntryList = [self.entryMondayOH, self.entryTuesdayOH, self.entryWednesdayOH, self.entryThursdayOH, self.entryFridayOH, self.entrySaturdayOH, self.entrySundayOH]
 
+        self.daysTuple = [("nh_monday",self.entryMondayNH),("nh_tuesday",self.entryTuesdayNH),("nh_wednesday",self.entryWednesdayNH),("nh_thursday",self.entryThursdayNH),("nh_friday",self.entryFridayNH),("nh_saturday",self.entrySaturdayNH),("nh_sunday",self.entrySundayNH),("oh_monday",self.entryMondayOH),("oh_tuesday",self.entryTuesdayOH),("oh_wednesday",self.entryTuesdayOH),("oh_thursday",self.entryThursdayOH),("oh_friday",self.entryFridayOH),("oh_saturday",self.entrySaturdayOH),("oh_sunday",self.entrySundayOH)];
 
 
         #date selection spinbox
@@ -102,8 +105,13 @@ class Application(Frame):
         # self.spinboxDate = Listbox(self)
         # self.spinboxDate.grid()
 
-        self.bttn2 = Button(self, text = "Get hours", command=self.getAllHoursTotals)
-        self.bttn2.grid(row=8)
+        self.hoursButton = Button(self, text = "Get hours", command=self.getAllHoursTotals)
+        self.hoursButton.grid(row=8)
+
+        self.createButton = Button(self, text = "Create", command=self.createTimesheetWithData)
+        self.createButton.grid(row=9)
+
+        # self.createTimesheetWithData()
         #
         # self.bttn3 = Button(self)
         # self.bttn3.grid()
@@ -149,39 +157,77 @@ class Application(Frame):
 
     #todo create dropdown with filesystem access to get the timesheet document template
 
+    def createTimesheetWithData(self):
+
+        # self.timesheetDocumentTemplatePath = "/users/patdynek/Documents/Maze Sys Ltd docs/templates/wa_timesheet_template.docx"
+        self.timesheetDocumentTemplatePath = abspath(expanduser("~/") + 'templates/wa_timesheet_template.docx')
+        self.openTimesheetDocumentTemplate()
+        self.insertHoursValues(self.daysTuple)
+        self.saveTimeSheetDocument()
+
     #open timesheet document
     def openTimesheetDocumentTemplate(self):
 
+        self.document = Document(self.timesheetDocumentTemplatePath)
+
     #insert hours values
-    def insertHoursValues(self):
+    def insertHoursValues(self,daysTuple):
+
+        for table in self.document.tables:
+            for cell in table._cells:
+
+                for (phDay,entryDay) in daysTuple:
+                    if phDay in cell.text:
+                        for paragraph in cell.paragraphs:
+                            print(paragraph.text)
+                            if entryDay.get():
+                                paragraph.text = entryDay.get()
+                            else:
+                                paragraph.text = "-"
+
+                # if 'nh_monday' in cell.text:
+                #     for paragraph in cell.paragraphs:
+                #         print(paragraph.text)
+                #         if self.entryMondayNH.get():
+                #             paragraph.text = self.entryMondayNH.get()
+                #         else:
+                #             paragraph.text = "-"
+
 
     #insert dates -> week days from selected monday
-    def insertDates(self):
+    # def insertDates(self):
+        #
 
     #save timesheet document
     def saveTimeSheetDocument(self):
+        self.document.save("/users/patdynek/Documents/Maze Sys Ltd docs/templates/saved_timesheet.docx")
 
 
     #todo create entry for hourly/day rate
     #todo create dropdown for selection of rate period
     #todo create dropdown with filesystem access to get the invoice document template
 
-    #open invoice document
-    def openInvoiceDocumentTemplate(self):
+    # #open invoice document
+    # def openInvoiceDocumentTemplate(self):
+    #     #
+    #
+    # #insert invoice values (invoice number, invoice date, invoice period, invoice description, units, unit value, total, subtotal, vat, gross total)
+    # def insertInvoiceNumber(self):
+    #     #
+    #
+    # def insertInvoiceDate(self):
+    #     #
+    #
+    # def insertInvoicePeriodAndDescription(self):
+    #     #
+    #
+    # def insertInvoiceUnitValues(self):
+    #     #
+    #
+    # def insertTotals(self):
+    #     #
 
-    #insert invoice values (invoice number, invoice date, invoice description, units, unit value, total, subtotal, vat, gross total)
-    def insertInvoiceNumber(self):
-
-    def insertInvoiceDate(self):
-
-    def insertInvoiceDescription(self):
-
-    def insertInvoiceUnitValues(self):
-
-    def insertTotals(self):
-
-
-
+    #todo add support for SQLite to save data when generating documents (history purpose or even safe copy)
 
 
 root = Tk()
