@@ -24,7 +24,7 @@ class Application(Frame):
         self.create_widgets()
         self.config(bg="lightgrey")
         self.place(width=300, height=300)
-        # self.getAllMondays(2015)
+        self.getAllMondays(2015)
 
     def create_widgets(self):
 
@@ -95,6 +95,7 @@ class Application(Frame):
         self.overtimeHoursEntryList = [self.entryMondayOH, self.entryTuesdayOH, self.entryWednesdayOH, self.entryThursdayOH, self.entryFridayOH, self.entrySaturdayOH, self.entrySundayOH]
 
         self.daysTuple = [("nh_monday",self.entryMondayNH),("nh_tuesday",self.entryTuesdayNH),("nh_wednesday",self.entryWednesdayNH),("nh_thursday",self.entryThursdayNH),("nh_friday",self.entryFridayNH),("nh_saturday",self.entrySaturdayNH),("nh_sunday",self.entrySundayNH),("oh_monday",self.entryMondayOH),("oh_tuesday",self.entryTuesdayOH),("oh_wednesday",self.entryTuesdayOH),("oh_thursday",self.entryThursdayOH),("oh_friday",self.entryFridayOH),("oh_saturday",self.entrySaturdayOH),("oh_sunday",self.entrySundayOH)];
+        self.daysPlaceholders = ["monday_date", "tuesday_date", "wednesday_date", "thursday_date", "friday_date", "saturday_date", "sunday_date"]
 
 
         #date selection spinbox
@@ -126,13 +127,36 @@ class Application(Frame):
         while start.weekday() != 0:
             start += oneday
 
-        days = []
+        self.mondays = []
         while start.year == year:
-            days.append(start)
+            self.mondays.append(start)
             start += oneweek
 
-        print(days)
-        return days
+        print(self.mondays)
+        return self.mondays
+
+    def insertDatesStartingFrom(self,mondayDate):
+
+        weekDays = []
+        self.dates = []
+
+        #get dates for next 7 days from monday
+        for i in range(0,7):
+            d = mondayDate + datetime.timedelta(days=i)
+            weekDays.append(d)
+
+        #create list with tuples (placeholder, date)
+        self.dates = list(zip(self.daysPlaceholders, weekDays))
+
+        if weekDays.__len__() == 7:
+            for table in self.document.tables:
+                for cell in table._cells:
+                        for (phDay,dayDate) in self.dates:
+                            if phDay in cell.text:
+                                for paragraph in cell.paragraphs:
+                                    print(paragraph.text)
+                                    paragraph.text = dayDate.strftime("%d/%m/%Y")
+
 
     def getAllHoursTotals(self):
 
@@ -163,6 +187,7 @@ class Application(Frame):
         self.timesheetDocumentTemplatePath = abspath(expanduser("~/") + 'templates/wa_timesheet_template.docx')
         self.openTimesheetDocumentTemplate()
         self.insertHoursValues(self.daysTuple)
+        self.insertDatesStartingFrom(self.mondays[15])
         self.saveTimeSheetDocument()
 
     #open timesheet document
