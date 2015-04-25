@@ -5,7 +5,9 @@ import sys
 import os
 import datetime
 from tkinter import *
-# from tkFileDialog import askopenfilename
+from tkinter.filedialog import askopenfilename
+from tkinter.messagebox import showerror
+
 # from decimal import Decimal
 from docx import Document
 from os.path import abspath, expanduser
@@ -17,80 +19,55 @@ from os.path import abspath, expanduser
 #
 #
 
-class Application(Frame):
-    def __init__(self, master):
-        Frame.__init__(self, master)
-        self.grid()
-        self.create_widgets()
-        self.config(bg="lightgrey")
-        self.place(width=300, height=300)
-        self.getAllMondays(2015)
+# class MainFrame(Frame):
+#     def __init__(self, master=NONE):
+#         Frame.__init__(self, master)
+#         self.master = master
+#         self.grid(padx=5, pady=5)
+#         self.addModules()
+#
+#     def addModules(self):
+#         timesheet = Timesheet(self).grid(row=0,column=0)
+#         invoice = Invoice(self).grid(row=0,column=1)
 
-    def create_widgets(self):
+class Application:
+    def __init__(self, parent):
 
-        #todo: create data picker to find out week starting day
-        #todo: implement docx library
-        #todo: create outputs of documents
-        #todo: try to write invoice module based on invoice template
+        self.myParent = parent
 
-        #header labels
-        self.labelDays = Label(self, text = "Day", font = "System 12 bold", bg="lightgray")
-        self.labelDays.grid(row=0)
-        self.labelNormalHours = Label(self, text = "Normal\nhours", font = "System 12 bold", bg="lightgray")
-        self.labelNormalHours.grid(row=0, column=1)
-        self.labelOvertimeHours = Label(self, text = "Overtime\nhours", font = "System 12 bold", bg="lightgray")
-        self.labelOvertimeHours.grid(row=0, column=2)
+        # define Main frame
+        self.mainFrame = Frame(parent)
+        self.mainFrame.grid()
 
-        #labels and inputs
-        self.labelMonday = Label(self, text = "Monday", font = "System 12", bg="lightgray")
-        self.labelMonday.grid(row=1, sticky=E)
-        self.entryMondayNH = Entry(self,width=2)
-        self.entryMondayNH.grid(row=1, column=1)
-        self.entryMondayOH = Entry(self,width=2)
-        self.entryMondayOH.grid(row=1, column=2)
+        rowNumber = 0
 
-        self.labelTuesday = Label(self, text = "Tuesday", font = "System 12", bg="lightgray")
-        self.labelTuesday.grid(row=2, sticky=E)
-        self.entryTuesdayNH = Entry(self,width=2)
-        self.entryTuesdayNH.grid(row=2, column=1)
-        self.entryTuesdayOH = Entry(self,width=2)
-        self.entryTuesdayOH.grid(row=2, column=2)
+        # define Timesheet label
+        self.timesheetLabel = Label(self.mainFrame, text="Timesheet", font="System 14 bold")
+        self.timesheetLabel.grid(row=rowNumber, column=0)
 
-        self.labelWednesday = Label(self, text = "Wednesday", font = "System 12", bg="lightgray")
-        self.labelWednesday.grid(row=3, sticky=E)
-        self.entryWednesdayNH = Entry(self,width=2)
-        self.entryWednesdayNH.grid(row=3, column=1)
-        self.entryWednesdayOH = Entry(self,width=2)
-        self.entryWednesdayOH.grid(row=3, column=2)
+        # define Invoice label
+        self.invoiceLabel = Label(self.mainFrame, text="Invoice", font="System 14 bold")
+        self.invoiceLabel.grid(row=rowNumber, column=1)
 
-        self.labelThursday = Label(self, text = "Thursday", font = "System 12", bg="lightgray")
-        self.labelThursday.grid(row=4, sticky=E)
-        self.entryThursdayNH = Entry(self,width=2)
-        self.entryThursdayNH.grid(row=4, column=1,)
-        self.entryThursdayOH = Entry(self,width=2)
-        self.entryThursdayOH.grid(row=4, column=2,)
+        rowNumber += 1
 
-        self.labelFriday = Label(self, text = "Friday", font = "System 12", bg="lightgray")
-        self.labelFriday.grid(row=5, sticky=E)
-        self.entryFridayNH = Entry(self,width=2)
-        self.entryFridayNH.grid(row=5, column=1)
-        self.entryFridayOH = Entry(self,width=2)
-        self.entryFridayOH.grid(row=5, column=2)
+        # define Timesheet frame
+        self.timesheetFrame = Frame(self.mainFrame, bg="white", borderwidth=1, relief=SUNKEN, width=300, height=400)
+        self.timesheetFrame.grid(row=rowNumber, column=0, padx=5, pady=5)
+        self.timesheetFrame.grid_propagate(0)
 
-        self.labelSaturday = Label(self, text = "Saturday", font = "System 12", bg="lightgray")
-        self.labelSaturday.grid(row=6, sticky=E)
-        self.entrySaturdayNH = Entry(self,width=2)
-        self.entrySaturdayNH.grid(row=6, column=1)
-        self.entrySaturdayOH = Entry(self,width=2)
-        self.entrySaturdayOH.grid(row=6, column=2)
+        # create timesheet widgets
+        self.createTimesheetWidgets()
 
-        self.labelSunday = Label(self, text = "Sunday", font = "System 12", bg="lightgray")
-        self.labelSunday.grid(row=7, sticky=E)
-        self.entrySundayNH = Entry(self, width=2)
-        self.entrySundayNH.grid(row=7, column=1)
-        self.entrySundayOH = Entry(self, width=2)
-        self.entrySundayOH.grid(row=7, column=2)
+        # define Invoice frame
+        self.invoiceFrame = Frame(self.mainFrame, bg="white", borderwidth=1, relief=SUNKEN, width=300, height=400)
+        self.invoiceFrame.grid(row=rowNumber, column=1, padx=5, pady=5)
+        self.invoiceFrame.grid_propagate(0)
 
+        # create invoice widgets
+        self.createInvoiceFrameWidgets()
+
+        # create helper tuples
         self.normalHoursEntryList = [self.entryMondayNH, self.entryTuesdayNH, self.entryWednesdayNH, self.entryThursdayNH, self.entryFridayNH, self.entrySaturdayNH, self.entrySundayNH]
         self.overtimeHoursEntryList = [self.entryMondayOH, self.entryTuesdayOH, self.entryWednesdayOH, self.entryThursdayOH, self.entryFridayOH, self.entrySaturdayOH, self.entrySundayOH]
 
@@ -98,25 +75,178 @@ class Application(Frame):
         self.daysPlaceholders = ["monday_date", "tuesday_date", "wednesday_date", "thursday_date", "friday_date", "saturday_date", "sunday_date"]
 
 
-        #date selection spinbox
 
-        # listboxDates = []
-        # listboxDates = self.getAllMondays(2015)
-        #
-        # self.spinboxDate = Listbox(self)
-        # self.spinboxDate.grid()
+        # # self.timesheetFrame.pack( padx=5, pady=5)
+        # self.timesheetFrame.config(bg="white")
+        # self.timesheetFrame.grid(padx=5, pady=5)
 
-        self.hoursButton = Button(self, text = "Get hours", command=self.getAllHoursTotals)
-        self.hoursButton.grid(row=8)
 
-        self.createButton = Button(self, text = "Create", command=self.createTimesheetWithData)
-        self.createButton.grid(row=9)
 
-        # self.createTimesheetWithData()
-        #
-        # self.bttn3 = Button(self)
-        # self.bttn3.grid()
-        # self.bttn3["text"] = "Apply"
+        # self.grid(padx=5, pady=5)
+        # self.config(bg="white", borderwidth=1, relief=SUNKEN)
+        # self.place(width=300, height=400)
+        # self.create_widgets()
+
+
+
+
+        # self.getAllMondays(2015)
+
+    def createTimesheetWidgets(self):
+
+        self.timesheetTemplateFilenameString = StringVar()
+
+        # template frame
+        self.timesheetTemplateFrame = Frame(self.timesheetFrame, bg="white", width=300)
+        self.timesheetTemplateFrame.grid(padx=5, pady=5)
+
+        templateRowNumber = 0
+
+        self.selectTimesheetTemplateButton = Button(self.timesheetTemplateFrame, text = "Select template", command=self.selectTimesheetTemplate)
+        self.selectTimesheetTemplateButton.grid(row=templateRowNumber)
+
+        templateRowNumber += 1
+
+        self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=30)
+        self.entryTemplatePath.grid(row=templateRowNumber)
+
+
+        # details frame
+        self.timesheetDetailsFrame = Frame(self.timesheetFrame, bg="white", width=300)
+        self.timesheetDetailsFrame.grid(padx=5, pady=5)
+
+        detailRowNumber = 0
+
+        self.consultantName = Entry(self.timesheetDetailsFrame)
+        self.consultantName.insert(0, 'Your name')
+        self.consultantName.grid(row=detailRowNumber, columnspan=3)
+        detailRowNumber += 1
+
+        self.clientName = Entry(self.timesheetDetailsFrame)
+        self.clientName.insert(0, 'Client name')
+        self.clientName.grid(row=detailRowNumber, columnspan=3)
+        detailRowNumber += 1
+
+        # date picker frame
+        self.dateFrame = Frame(self.timesheetFrame, bg="white", width=300)
+        self.dateFrame.grid(padx=5, pady=5)
+
+        self.dateSelected = StringVar()
+        self.dateSelected.set("Select monday")
+
+        self.dateMenu = OptionMenu(self.dateFrame, self.dateSelected, *self.getAllMondays(2015))
+        # way to feed list/tuple to option menu
+        # self.dateMenu = apply(OptionMenu, (self.dateFrame, self.dateSelected) + tuple(self.getAllMondays(2015)))
+        self.dateMenu.grid()
+
+        # hours frame
+        self.hoursFrame = Frame(self.timesheetFrame, bg="white", width=300)
+        self.hoursFrame.grid(padx=5, pady=5)
+
+        hoursRowNumber = 0
+
+        #header labels
+        self.labelDays = Label(self.hoursFrame, text="Day", font="System 12 bold")
+        self.labelDays.grid(row=hoursRowNumber)
+        self.labelNormalHours = Label(self.hoursFrame, text="Normal\nhours", font="System 12 bold")
+        self.labelNormalHours.grid(row=hoursRowNumber, column=1)
+        self.labelOvertimeHours = Label(self.hoursFrame, text="Overtime\nhours", font="System 12 bold")
+        self.labelOvertimeHours.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        #labels and inputs
+        self.labelMonday = Label(self.hoursFrame, text="Monday", font="System 12")
+        self.labelMonday.grid(row=hoursRowNumber, sticky=E)
+        self.entryMondayNH = Entry(self.hoursFrame, width=2)
+        self.entryMondayNH.grid(row=hoursRowNumber, column=1)
+        self.entryMondayOH = Entry(self.hoursFrame, width=2)
+        self.entryMondayOH.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        self.labelTuesday = Label(self.hoursFrame, text="Tuesday", font="System 12")
+        self.labelTuesday.grid(row=hoursRowNumber, sticky=E)
+        self.entryTuesdayNH = Entry(self.hoursFrame, width=2)
+        self.entryTuesdayNH.grid(row=hoursRowNumber, column=1)
+        self.entryTuesdayOH = Entry(self.hoursFrame, width=2)
+        self.entryTuesdayOH.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        self.labelWednesday = Label(self.hoursFrame, text="Wednesday", font="System 12")
+        self.labelWednesday.grid(row=hoursRowNumber, sticky=E)
+        self.entryWednesdayNH = Entry(self.hoursFrame, width=2)
+        self.entryWednesdayNH.grid(row=hoursRowNumber, column=1)
+        self.entryWednesdayOH = Entry(self.hoursFrame, width=2)
+        self.entryWednesdayOH.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        self.labelThursday = Label(self.hoursFrame, text="Thursday", font="System 12")
+        self.labelThursday.grid(row=hoursRowNumber, sticky=E)
+        self.entryThursdayNH = Entry(self.hoursFrame, width=2)
+        self.entryThursdayNH.grid(row=hoursRowNumber, column=1,)
+        self.entryThursdayOH = Entry(self.hoursFrame, width=2)
+        self.entryThursdayOH.grid(row=hoursRowNumber, column=2,)
+        hoursRowNumber += 1
+
+        self.labelFriday = Label(self.hoursFrame, text="Friday", font="System 12")
+        self.labelFriday.grid(row=hoursRowNumber, sticky=E)
+        self.entryFridayNH = Entry(self.hoursFrame,width=2)
+        self.entryFridayNH.grid(row=hoursRowNumber, column=1)
+        self.entryFridayOH = Entry(self.hoursFrame,width=2)
+        self.entryFridayOH.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        self.labelSaturday = Label(self.hoursFrame, text="Saturday", font="System 12")
+        self.labelSaturday.grid(row=hoursRowNumber, sticky=E)
+        self.entrySaturdayNH = Entry(self.hoursFrame, width=2)
+        self.entrySaturdayNH.grid(row=hoursRowNumber, column=1)
+        self.entrySaturdayOH = Entry(self.hoursFrame, width=2)
+        self.entrySaturdayOH.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        self.labelSunday = Label(self.hoursFrame, text="Sunday", font="System 12")
+        self.labelSunday.grid(row=hoursRowNumber, sticky=E)
+        self.entrySundayNH = Entry(self.hoursFrame, width=2)
+        self.entrySundayNH.grid(row=hoursRowNumber, column=1)
+        self.entrySundayOH = Entry(self.hoursFrame, width=2)
+        self.entrySundayOH.grid(row=hoursRowNumber, column=2)
+        hoursRowNumber += 1
+
+        #add the creation button
+        self.createButton = Button(self.timesheetFrame, text = "Create", command=self.createTimesheetWithData)
+        self.createButton.grid(row=3)
+
+    def createInvoiceFrameWidgets(self):
+
+        self.invoiceTemplateFilenameString = StringVar()
+
+        # template picker frame
+        self.invoiceTemplatePickerFrame = Frame(self.invoiceFrame, bg="white", width=300)
+        self.invoiceTemplatePickerFrame.grid(padx=5, pady=5)
+
+        # invoice details frame
+        self.invoiceDetailsFrame = Frame(self.invoiceFrame, bg="white", width=300)
+        self.invoiceDetailsFrame.grid(padx=5, pady=5)
+
+        self.labelInvoiceNumber = Label(self.invoiceDetailsFrame, text="Invoice number", font="System 12")
+        self.labelInvoiceNumber.grid(row=0, sticky=E)
+        self.entryInvoiceNumber = Entry(self.invoiceDetailsFrame, width=5)
+        self.entryInvoiceNumber.grid(row=0, column=1, sticky=W)
+
+        self.labelInvoiceDescription = Label(self.invoiceDetailsFrame, text="Invoice description", font="System 12")
+        self.labelInvoiceDescription.grid(row=1, sticky=E)
+        self.entryInvoiceDescription = Entry(self.invoiceDetailsFrame, width=20)
+        self.entryInvoiceDescription.grid(row=1, column=1, sticky=W)
+
+        self.labelUnitsNumber = Label(self.invoiceDetailsFrame, text="Units number", font="System 12")
+        self.labelUnitsNumber.grid(row=2, sticky=E)
+        self.entryUnitsNumber = Entry(self.invoiceDetailsFrame, width=5)
+        self.entryUnitsNumber.grid(row=2, column=1, sticky=W)
+
+        self.labelUnitPrice = Label(self.invoiceDetailsFrame, text="Unit price", font="System 12")
+        self.labelUnitPrice.grid(row=3, sticky=E)
+        self.entryUnitPrice = Entry(self.invoiceDetailsFrame, width=5)
+        self.entryUnitPrice.grid(row=3, column=1, sticky=W)
+
 
     def getAllMondays(self, year):
 
@@ -134,29 +264,6 @@ class Application(Frame):
 
         print(self.mondays)
         return self.mondays
-
-    def insertDatesStartingFrom(self,mondayDate):
-
-        weekDays = []
-        self.dates = []
-
-        #get dates for next 7 days from monday
-        for i in range(0,7):
-            d = mondayDate + datetime.timedelta(days=i)
-            weekDays.append(d)
-
-        #create list with tuples (placeholder, date)
-        self.dates = list(zip(self.daysPlaceholders, weekDays))
-
-        if weekDays.__len__() == 7:
-            for table in self.document.tables:
-                for cell in table._cells:
-                        for (phDay,dayDate) in self.dates:
-                            if phDay in cell.text:
-                                for paragraph in cell.paragraphs:
-                                    print(paragraph.text)
-                                    paragraph.text = dayDate.strftime("%d/%m/%Y")
-
 
     def getAllHoursTotals(self):
 
@@ -178,8 +285,18 @@ class Application(Frame):
         # print(self.entryMondayNH.get())
         # print("Button pressed")
 
-
-    #todo create dropdown with filesystem access to get the timesheet document template
+    def selectTimesheetTemplate(self):
+        timesheetTemplateFilename = askopenfilename(filetypes=(("Word 2007 doc files", "*.docx"),
+                                                               ("All files", "*.*")))
+        if timesheetTemplateFilename:
+            try:
+                # print("here it comes: self.settings["template"].set(timesheetTemplateFilename)")
+                self.timesheetTemplateFilenameString.set(timesheetTemplateFilename)
+                self.entryTemplatePath.insert(0,timesheetTemplateFilename)
+                print(timesheetTemplateFilename)
+            except:                     # <- naked except is a bad idea
+                showerror("Open Source File", "Failed to read file\n'%s'" % timesheetTemplateFilename)
+            return
 
     def createTimesheetWithData(self):
 
@@ -219,44 +336,44 @@ class Application(Frame):
                 #             paragraph.text = "-"
 
 
-    #insert dates -> week days from selected monday
-    # def insertDates(self):
-        #
+    def insertDatesStartingFrom(self,mondayDate):
+
+        weekDays = []
+        self.dates = []
+
+        #get dates for next 7 days from monday
+        for i in range(0,7):
+            d = mondayDate + datetime.timedelta(days=i)
+            weekDays.append(d)
+
+        #create list with tuples (placeholder, date)
+        self.dates = list(zip(self.daysPlaceholders, weekDays))
+
+        if weekDays.__len__() == 7:
+            for table in self.document.tables:
+                for cell in table._cells:
+                        for (phDay,dayDate) in self.dates:
+                            if phDay in cell.text:
+                                for paragraph in cell.paragraphs:
+                                    print(paragraph.text)
+                                    paragraph.text = dayDate.strftime("%d/%m/%Y")
 
     #save timesheet document
     def saveTimeSheetDocument(self):
         self.document.save("/users/patdynek/Documents/Maze Sys Ltd docs/templates/saved_timesheet.docx")
 
 
-    #todo create entry for hourly/day rate
-    #todo create dropdown for selection of rate period
-    #todo create dropdown with filesystem access to get the invoice document template
-
-    # #open invoice document
-    # def openInvoiceDocumentTemplate(self):
-    #     #
-    #
-    # #insert invoice values (invoice number, invoice date, invoice period, invoice description, units, unit value, total, subtotal, vat, gross total)
-    # def insertInvoiceNumber(self):
-    #     #
-    #
-    # def insertInvoiceDate(self):
-    #     #
-    #
-    # def insertInvoicePeriodAndDescription(self):
-    #     #
-    #
-    # def insertInvoiceUnitValues(self):
-    #     #
-    #
-    # def insertTotals(self):
-    #     #
-
     #todo add support for SQLite to save data when generating documents (history purpose or even safe copy)
 
 
 root = Tk()
-root.title("Timesheet App")
-root.geometry("600x600")
+root.title("Timesheets & Invoices")
+root.geometry("650x610")
+root.config(padx=5, pady=5)
+root.grid_propagate(0)
+# timesheetModule = Timesheet(root)
+# invoiceModule = Invoice(root)
+
 app = Application(root)
+
 root.mainloop()
