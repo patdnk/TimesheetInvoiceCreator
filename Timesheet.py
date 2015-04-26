@@ -8,33 +8,32 @@ from tkinter import *
 from tkinter.filedialog import askopenfilename
 from tkinter.filedialog import askdirectory
 from tkinter.messagebox import showerror
-
 # from decimal import Decimal
 from docx import Document
+from dateutil import parser
 from os.path import abspath, expanduser
 
-# class WeekSelector(StringVar)
-#     def __init__(self):
-#         self.getAllMondays()
-#
-#
-#
+#todo Add validation before creating timesheet/invoice
+#todo Add database history management (read, recreate, reprint)
 
-# class MainFrame(Frame):
-#     def __init__(self, master=NONE):
-#         Frame.__init__(self, master)
-#         self.master = master
-#         self.grid(padx=5, pady=5)
-#         self.addModules()
-#
-#     def addModules(self):
-#         timesheet = Timesheet(self).grid(row=0,column=0)
-#         invoice = Invoice(self).grid(row=0,column=1)
 
 class Application:
     def __init__(self, parent):
 
         self.myParent = parent
+
+        # define StringVars
+        self.timesheetTemplateFilenameString = StringVar()
+        self.timesheetTemplateLabelString = StringVar()
+        self.timesheetDestinationDirectoryString = StringVar()
+        self.timesheetDestinationLabelString = StringVar()
+        self.timesheetDestinationPathString = StringVar()
+        self.dateSelected = StringVar()
+        self.invoiceTemplateFilenameString = StringVar()
+        self.invoiceTemplateLabelString = StringVar()
+        self.invoiceDestinationDirectoryString = StringVar()
+        self.invoiceDestinationLabelString = StringVar()
+        self.invoiceDestinationPathString = StringVar()
 
         # define Main frame
         self.mainFrame = Frame(parent)
@@ -76,26 +75,7 @@ class Application:
         self.daysPlaceholders = ["monday_date", "tuesday_date", "wednesday_date", "thursday_date", "friday_date", "saturday_date", "sunday_date"]
 
 
-
-        # # self.timesheetFrame.pack( padx=5, pady=5)
-        # self.timesheetFrame.config(bg="white")
-        # self.timesheetFrame.grid(padx=5, pady=5)
-
-
-
-        # self.grid(padx=5, pady=5)
-        # self.config(bg="white", borderwidth=1, relief=SUNKEN)
-        # self.place(width=300, height=400)
-        # self.create_widgets()
-
-
-
-
-        # self.getAllMondays(2015)
-
     def createTimesheetWidgets(self):
-
-        self.timesheetTemplateFilenameString = StringVar()
 
         # template frame
         self.timesheetTemplateFrame = Frame(self.timesheetFrame, bg="white", width=300)
@@ -114,8 +94,8 @@ class Application:
 
         # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
         # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
-        self.templatePathString = StringVar()
-        self.templatePathLabel = Label(self.timesheetTemplateFrame, textvariable=self.templatePathString, width=32, font="System 11", bg="white smoke")
+
+        self.templatePathLabel = Label(self.timesheetTemplateFrame, textvariable=self.timesheetTemplateLabelString, width=32, font="System 11", bg="white smoke")
         self.templatePathLabel.grid(row=templateRowNumber, column=1)
 
 
@@ -153,7 +133,7 @@ class Application:
 
         dateRowNumber += 1
 
-        self.dateSelected = StringVar()
+        # set placeholder text
         self.dateSelected.set("Select monday")
 
         self.dateMenu = OptionMenu(self.dateFrame, self.dateSelected, *self.getAllMondays(2015))
@@ -238,9 +218,7 @@ class Application:
         self.entrySundayOH.grid(row=hoursRowNumber, column=2)
         hoursRowNumber += 1
 
-        self.timesheetSaveDestinationPathString = StringVar()
-
-        # template frame
+        # destination frame
         self.timesheetSavePathFrame = Frame(self.timesheetFrame, bg="white", width=300)
         self.timesheetSavePathFrame.grid(padx=5, pady=5)
 
@@ -257,17 +235,15 @@ class Application:
 
         # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
         # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
-        self.templateDestinationPathString = StringVar()
-        self.templateDestinationPathLabel = Label(self.timesheetSavePathFrame, textvariable=self.templateDestinationPathString, width=32, font="System 11", bg="white smoke")
+
+        self.templateDestinationPathLabel = Label(self.timesheetSavePathFrame, textvariable=self.timesheetDestinationLabelString, width=32, font="System 11", bg="white smoke")
         self.templateDestinationPathLabel.grid(row=templateRowNumber, column=1)
 
         #add the creation button
         self.createButton = Button(self.timesheetFrame, text = "Create", command=self.createTimesheetWithData)
-        self.createButton.grid()
+        self.createButton.grid(sticky=E)
 
     def createInvoiceFrameWidgets(self):
-
-        self.invoiceTemplateFilenameString = StringVar()
 
         # template frame
         self.invoiceTemplateFrame = Frame(self.invoiceFrame, bg="white", width=300)
@@ -286,35 +262,45 @@ class Application:
 
         # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
         # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
-        self.invoicePathString = StringVar()
-        self.invoicePathLabel = Label(self.invoiceTemplateFrame, textvariable=self.invoicePathString, width=32, font="System 11", bg="white smoke")
+
+        self.invoicePathLabel = Label(self.invoiceTemplateFrame, textvariable=self.invoiceTemplateLabelString, width=32, font="System 11", bg="white smoke")
         self.invoicePathLabel.grid(row=templateRowNumber, column=1)
 
         # invoice details frame
         self.invoiceDetailsFrame = Frame(self.invoiceFrame, bg="white", width=300)
         self.invoiceDetailsFrame.grid(padx=5, pady=5)
 
+        detailRowNumber = 0
+
+        self.invoiceDetailsFrameTitle = Label(self.invoiceDetailsFrame, text="Details", font="System 11", fg="darkgray")
+        self.invoiceDetailsFrameTitle.grid(row=detailRowNumber, sticky=W)
+        detailRowNumber += 1
+
         self.labelInvoiceNumber = Label(self.invoiceDetailsFrame, text="Invoice number", font="System 12")
-        self.labelInvoiceNumber.grid(row=0, sticky=E)
+        self.labelInvoiceNumber.grid(row=detailRowNumber, sticky=E)
         self.entryInvoiceNumber = Entry(self.invoiceDetailsFrame, width=5)
-        self.entryInvoiceNumber.grid(row=0, column=1, sticky=W)
+        self.entryInvoiceNumber.grid(row=detailRowNumber, column=1, sticky=W)
+        detailRowNumber += 1
 
         self.labelInvoiceDescription = Label(self.invoiceDetailsFrame, text="Invoice description", font="System 12")
-        self.labelInvoiceDescription.grid(row=1, sticky=E)
+        self.labelInvoiceDescription.grid(row=detailRowNumber, sticky=E)
         self.entryInvoiceDescription = Entry(self.invoiceDetailsFrame, width=20)
-        self.entryInvoiceDescription.grid(row=1, column=1, sticky=W)
+        self.entryInvoiceDescription.grid(row=detailRowNumber, column=1, sticky=W)
+        detailRowNumber += 1
 
         self.labelUnitsNumber = Label(self.invoiceDetailsFrame, text="Units number", font="System 12")
-        self.labelUnitsNumber.grid(row=2, sticky=E)
+        self.labelUnitsNumber.grid(row=detailRowNumber, sticky=E)
         self.entryUnitsNumber = Entry(self.invoiceDetailsFrame, width=5)
-        self.entryUnitsNumber.grid(row=2, column=1, sticky=W)
+        self.entryUnitsNumber.grid(row=detailRowNumber, column=1, sticky=W)
+        detailRowNumber += 1
 
         self.labelUnitPrice = Label(self.invoiceDetailsFrame, text="Unit price", font="System 12")
-        self.labelUnitPrice.grid(row=3, sticky=E)
+        self.labelUnitPrice.grid(row=detailRowNumber, sticky=E)
         self.entryUnitPrice = Entry(self.invoiceDetailsFrame, width=5)
-        self.entryUnitPrice.grid(row=3, column=1, sticky=W)
+        self.entryUnitPrice.grid(row=detailRowNumber, column=1, sticky=W)
+        detailRowNumber += 1
 
-        self.timesheetSaveDestinationPathString = StringVar()
+
 
         # destination frame
         self.invoiceSavePathFrame = Frame(self.invoiceFrame, bg="white", width=300)
@@ -333,10 +319,13 @@ class Application:
 
         # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
         # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
-        self.invoiceDestinationPathString = StringVar()
-        self.invoiceDestinationPathLabel = Label(self.invoiceSavePathFrame, textvariable=self.invoiceDestinationPathString, width=32, font="System 11", bg="white smoke")
+
+        self.invoiceDestinationPathLabel = Label(self.invoiceSavePathFrame, textvariable=self.invoiceDestinationLabelString, width=32, font="System 11", bg="white smoke")
         self.invoiceDestinationPathLabel.grid(row=templateRowNumber, column=1)
 
+        #add the creation button
+        invoiceCreateButton = Button(self.invoiceFrame, text = "Create", command=self.createInvoice)
+        invoiceCreateButton.grid(sticky=E)
 
     def getAllMondays(self, year):
 
@@ -381,10 +370,11 @@ class Application:
         if timesheetTemplateFilename:
             try:
                 self.timesheetTemplateFilenameString.set(timesheetTemplateFilename)
+                print(self.timesheetTemplateFilenameString)
                 urlParts = timesheetTemplateFilename.rsplit("/", 2)
                 # trimmedTemplatePath = ".../" + urlParts[1] + "/" + urlParts[2]
                 trimmedTemplatePath = ".../" + urlParts[2]
-                self.templatePathString.set(trimmedTemplatePath)
+                self.timesheetTemplateLabelString.set(trimmedTemplatePath)
                 print(trimmedTemplatePath)
             except:
                 showerror("Open Source File", "Failed to read file\n'%s'" % timesheetTemplateFilename)
@@ -392,41 +382,64 @@ class Application:
 
     def selectTimesheetDestinationFolder(self):
         timesheetSavingDirectory  = askdirectory(title="Please select a directory")
-
         if len(timesheetSavingDirectory) > 0:
             try:
-                self.timesheetSaveDestinationPathString.set(timesheetSavingDirectory)
+                self.timesheetDestinationDirectoryString.set(timesheetSavingDirectory)
                 urlParts = timesheetSavingDirectory.rsplit("/", 2)
                 trimmedTemplatePath = ".../" + urlParts[2]
-                self.templateDestinationPathString.set(trimmedTemplatePath)
+                self.timesheetDestinationLabelString.set(trimmedTemplatePath)
                 print(timesheetSavingDirectory)
             except:
                 showerror("Select directory", "Failed to open directory\n'%s'" % timesheetSavingDirectory)
             return
 
     def selectInvoiceTemplate(self):
-        return
+        invoiceTemplateFilename = askopenfilename(filetypes=(("Word 2007 doc files", "*.docx"),
+                                                               ("All files", "*.*")))
+        if invoiceTemplateFilename:
+            try:
+                self.invoiceTemplateFilenameString.set(invoiceTemplateFilename)
+                urlParts = invoiceTemplateFilename.rsplit("/", 2)
+                # trimmedTemplatePath = ".../" + urlParts[1] + "/" + urlParts[2]
+                trimmedTemplatePath = ".../" + urlParts[2]
+                self.invoiceTemplateLabelString.set(trimmedTemplatePath)
+                print(trimmedTemplatePath)
+            except:
+                showerror("Open Source File", "Failed to read file\n'%s'" % timesheetTemplateFilename)
+            return
 
     def selectInvoiceDestinationFolder(self):
-        return
+        timesheetSavingDirectory  = askdirectory(title="Please select a directory")
+        if len(timesheetSavingDirectory) > 0:
+            try:
+                self.invoiceDestinationDirectoryString.set(timesheetSavingDirectory)
+                urlParts = timesheetSavingDirectory.rsplit("/", 2)
+                trimmedTemplatePath = ".../" + urlParts[2]
+                self.invoiceDestinationLabelString.set(trimmedTemplatePath)
+                print(timesheetSavingDirectory)
+            except:
+                showerror("Select directory", "Failed to open directory\n'%s'" % timesheetSavingDirectory)
+            return
 
     def createTimesheetWithData(self):
-
         # self.timesheetDocumentTemplatePath = "/users/patdynek/Documents/Maze Sys Ltd docs/templates/wa_timesheet_template.docx"
-        self.timesheetDocumentTemplatePath = abspath(expanduser("~/") + 'templates/wa_timesheet_template.docx')
+        # self.timesheetDocumentTemplatePath = abspath(expanduser("~/") + 'templates/wa_timesheet_template.docx')
         self.openTimesheetDocumentTemplate()
         self.insertHoursValues(self.daysTuple)
-        self.insertDatesStartingFrom(self.mondays[15])
+        self.insertDatesStartingFrom(self.dateSelected.get())
+        self.insertTimesheetDetails()
         self.saveTimeSheetDocument()
+
+    def createInvoice(self):
+        return
 
     #open timesheet document
     def openTimesheetDocumentTemplate(self):
-
-        self.document = Document(self.timesheetDocumentTemplatePath)
+        self.document = Document(self.timesheetTemplateFilenameString.get())
 
     #insert hours values
     def insertHoursValues(self,daysTuple):
-
+        #insert hours from entries
         for table in self.document.tables:
             for cell in table._cells:
 
@@ -438,24 +451,59 @@ class Application:
                                 paragraph.text = entryDay.get()
                             else:
                                 paragraph.text = "-"
+        #sum up all hours
+        totalNormalHours = 0
+        totalOvertimeHours = 0
+        for (phDay,entryDay) in daysTuple:
+            if phDay[:2] == "nh":
+                if entryDay.get():
+                    totalNormalHours += int(entryDay.get())
+            elif phDay[:2] == "oh":
+                if entryDay.get():
+                    totalOvertimeHours += int(entryDay.get())
 
-                # if 'nh_monday' in cell.text:
-                #     for paragraph in cell.paragraphs:
-                #         print(paragraph.text)
-                #         if self.entryMondayNH.get():
-                #             paragraph.text = self.entryMondayNH.get()
-                #         else:
-                #             paragraph.text = "-"
+
+        if (totalNormalHours >= 0 or totalOvertimeHours >= 0):
+            for table in self.document.tables:
+                for cell in table._cells:
+                    if "nh_total" in cell.text:
+                        for paragraph in cell.paragraphs:
+                            if totalNormalHours > 0:
+                                paragraph.text = str(totalNormalHours)
+                            else:
+                                paragraph.text = "-"
+                    elif "oh_total" in cell.text:
+                        for paragraph in cell.paragraphs:
+                            if totalOvertimeHours > 0:
+                                paragraph.text = str(totalOvertimeHours)
+                            else:
+                                paragraph.text = "-"
+
+    def insertTimesheetDetails(self):
+        for table in self.document.tables:
+                for cell in table._cells:
+                    if "consultant_name" in cell.text:
+                        for paragraph in cell.paragraphs:
+                            if self.consultantName.get():
+                                paragraph.text = self.consultantName.get()
+                    elif "client_name" in cell.text:
+                        for paragraph in cell.paragraphs:
+                            if self.clientName.get():
+                                paragraph.text = self.clientName.get()
 
 
     def insertDatesStartingFrom(self,mondayDate):
+
+        print(mondayDate)
+        mondayDateDT = parser.parse(mondayDate)
+        print(mondayDateDT)
 
         weekDays = []
         self.dates = []
 
         #get dates for next 7 days from monday
         for i in range(0,7):
-            d = mondayDate + datetime.timedelta(days=i)
+            d = mondayDateDT + datetime.timedelta(days=i)
             weekDays.append(d)
 
         #create list with tuples (placeholder, date)
@@ -472,20 +520,22 @@ class Application:
 
     #save timesheet document
     def saveTimeSheetDocument(self):
-        self.document.save("/users/patdynek/Documents/Maze Sys Ltd docs/templates/saved_timesheet.docx")
+        weekStartDay = parser.parse(self.dateSelected.get())
+        weekEndDay = weekStartDay + datetime.timedelta(days=7)
+        timesheetName = "tsheetcsrpd_" + weekStartDay.strftime("%d%m%Y") + "_" + weekEndDay.strftime("%d%m%Y") # "tsheetcsrpd_060415-120415"
+        documentSavePath = self.timesheetDestinationDirectoryString.get() + "/" + timesheetName + ".docx"
+        # self.document.save("/users/patdynek/Documents/Maze Sys Ltd docs/templates/saved_timesheet.docx")
+        self.document.save(documentSavePath)
 
 
-    #todo add support for SQLite to save data when generating documents (history purpose or even safe copy)
-
+#####################
+#### Application ####
+#####################
 
 root = Tk()
 root.title("Timesheets & Invoices")
 root.geometry("650x610")
 root.config(padx=5, pady=5)
 root.grid_propagate(0)
-# timesheetModule = Timesheet(root)
-# invoiceModule = Invoice(root)
-
 app = Application(root)
-
 root.mainloop()
