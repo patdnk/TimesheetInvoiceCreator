@@ -522,7 +522,12 @@ class Application:
     def saveTimeSheetDocument(self):
         weekStartDay = parser.parse(self.dateSelected.get())
         weekEndDay = weekStartDay + datetime.timedelta(days=7)
-        timesheetName = "tsheetcsrpd_" + weekStartDay.strftime("%d%m%Y") + "_" + weekEndDay.strftime("%d%m%Y") # "tsheetcsrpd_060415-120415"
+
+        nameAbbr = ""
+        for word in self.consultantName.split():
+            nameAbbr += word[0]
+
+        timesheetName = "tsheet" + self.clientName.get().lower() + nameAbbr.lower() + "_" + weekStartDay.strftime("%d%m%Y") + "_" + weekEndDay.strftime("%d%m%Y") # "tsheetcsrpd_060415-120415"
         documentSavePath = self.timesheetDestinationDirectoryString.get() + "/" + timesheetName + ".docx"
         # self.document.save("/users/patdynek/Documents/Maze Sys Ltd docs/templates/saved_timesheet.docx")
         self.document.save(documentSavePath)
