@@ -6,6 +6,7 @@ import os
 import datetime
 from tkinter import *
 from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askdirectory
 from tkinter.messagebox import showerror
 
 # from decimal import Decimal
@@ -52,7 +53,7 @@ class Application:
         rowNumber += 1
 
         # define Timesheet frame
-        self.timesheetFrame = Frame(self.mainFrame, bg="white", borderwidth=1, relief=SUNKEN, width=300, height=400)
+        self.timesheetFrame = Frame(self.mainFrame, bg="white", borderwidth=1, relief=SUNKEN, width=310, height=550)
         self.timesheetFrame.grid(row=rowNumber, column=0, padx=5, pady=5)
         self.timesheetFrame.grid_propagate(0)
 
@@ -60,7 +61,7 @@ class Application:
         self.createTimesheetWidgets()
 
         # define Invoice frame
-        self.invoiceFrame = Frame(self.mainFrame, bg="white", borderwidth=1, relief=SUNKEN, width=300, height=400)
+        self.invoiceFrame = Frame(self.mainFrame, bg="white", borderwidth=1, relief=SUNKEN, width=310, height=550)
         self.invoiceFrame.grid(row=rowNumber, column=1, padx=5, pady=5)
         self.invoiceFrame.grid_propagate(0)
 
@@ -102,13 +103,20 @@ class Application:
 
         templateRowNumber = 0
 
-        self.selectTimesheetTemplateButton = Button(self.timesheetTemplateFrame, text = "Select template", command=self.selectTimesheetTemplate)
-        self.selectTimesheetTemplateButton.grid(row=templateRowNumber)
-
+        self.timesheetTemplateFrameTitle = Label(self.timesheetTemplateFrame, text="Template", font="System 11", fg="darkgray")
+        self.timesheetTemplateFrameTitle.grid(row=templateRowNumber, sticky=W, columnspan=2)
         templateRowNumber += 1
 
-        self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=30)
-        self.entryTemplatePath.grid(row=templateRowNumber)
+        self.selectTimesheetTemplateButton = Button(self.timesheetTemplateFrame, text = "Select", command=self.selectTimesheetTemplate)
+        self.selectTimesheetTemplateButton.grid(row=templateRowNumber)
+
+        # templateRowNumber += 1
+
+        # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
+        # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
+        self.templatePathString = StringVar()
+        self.templatePathLabel = Label(self.timesheetTemplateFrame, textvariable=self.templatePathString, width=32, font="System 11", bg="white smoke")
+        self.templatePathLabel.grid(row=templateRowNumber, column=1)
 
 
         # details frame
@@ -117,19 +125,33 @@ class Application:
 
         detailRowNumber = 0
 
-        self.consultantName = Entry(self.timesheetDetailsFrame)
-        self.consultantName.insert(0, 'Your name')
-        self.consultantName.grid(row=detailRowNumber, columnspan=3)
+        self.timesheetDetailsFrameTitle = Label(self.timesheetDetailsFrame, text="Details", font="System 11", fg="darkgray")
+        self.timesheetDetailsFrameTitle.grid(row=detailRowNumber, sticky=W)
         detailRowNumber += 1
 
-        self.clientName = Entry(self.timesheetDetailsFrame)
+        self.consultantName = Entry(self.timesheetDetailsFrame, width=35)
+        self.consultantName.insert(0, 'Your name')
+        self.consultantName.grid(row=detailRowNumber, sticky=W)
+        detailRowNumber += 1
+
+        self.clientName = Entry(self.timesheetDetailsFrame, width=35)
         self.clientName.insert(0, 'Client name')
-        self.clientName.grid(row=detailRowNumber, columnspan=3)
+        self.clientName.grid(row=detailRowNumber, sticky=W)
         detailRowNumber += 1
 
         # date picker frame
         self.dateFrame = Frame(self.timesheetFrame, bg="white", width=300)
         self.dateFrame.grid(padx=5, pady=5)
+
+        dateRowNumber = 0
+
+        self.timesheetDetailsFrameTitle = Label(self.dateFrame, text="Date", font="System 11", fg="darkgray")
+        self.timesheetDetailsFrameTitle.grid(row=dateRowNumber, sticky=W)
+
+        spaceFiller = Frame(self.dateFrame, width=258)
+        spaceFiller.grid(row=dateRowNumber, column=1)
+
+        dateRowNumber += 1
 
         self.dateSelected = StringVar()
         self.dateSelected.set("Select monday")
@@ -137,13 +159,18 @@ class Application:
         self.dateMenu = OptionMenu(self.dateFrame, self.dateSelected, *self.getAllMondays(2015))
         # way to feed list/tuple to option menu
         # self.dateMenu = apply(OptionMenu, (self.dateFrame, self.dateSelected) + tuple(self.getAllMondays(2015)))
-        self.dateMenu.grid()
+        self.dateMenu.grid(row=dateRowNumber, columnspan=2, sticky=W)
 
         # hours frame
         self.hoursFrame = Frame(self.timesheetFrame, bg="white", width=300)
-        self.hoursFrame.grid(padx=5, pady=5)
+        self.hoursFrame.grid(padx=5, pady=5, sticky=W)
 
         hoursRowNumber = 0
+
+        self.timesheetDetailsFrameTitle = Label(self.hoursFrame, text="Hours", font="System 11", fg="darkgray")
+        self.timesheetDetailsFrameTitle.grid(row=hoursRowNumber, columnspan=3, sticky=W)
+
+        hoursRowNumber += 1
 
         #header labels
         self.labelDays = Label(self.hoursFrame, text="Day", font="System 12 bold")
@@ -211,17 +238,57 @@ class Application:
         self.entrySundayOH.grid(row=hoursRowNumber, column=2)
         hoursRowNumber += 1
 
+        self.timesheetSaveDestinationPathString = StringVar()
+
+        # template frame
+        self.timesheetSavePathFrame = Frame(self.timesheetFrame, bg="white", width=300)
+        self.timesheetSavePathFrame.grid(padx=5, pady=5)
+
+        templateRowNumber = 0
+
+        self.timesheetDestinationFrameTitle = Label(self.timesheetSavePathFrame, text="Destination", font="System 11", fg="darkgray")
+        self.timesheetDestinationFrameTitle.grid(row=templateRowNumber, sticky=W, columnspan=2)
+        templateRowNumber += 1
+
+        self.selectTimesheetDestinationButton = Button(self.timesheetSavePathFrame, text = "Select", command=self.selectTimesheetDestinationFolder)
+        self.selectTimesheetDestinationButton.grid(row=templateRowNumber)
+
+        # templateRowNumber += 1
+
+        # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
+        # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
+        self.templateDestinationPathString = StringVar()
+        self.templateDestinationPathLabel = Label(self.timesheetSavePathFrame, textvariable=self.templateDestinationPathString, width=32, font="System 11", bg="white smoke")
+        self.templateDestinationPathLabel.grid(row=templateRowNumber, column=1)
+
         #add the creation button
         self.createButton = Button(self.timesheetFrame, text = "Create", command=self.createTimesheetWithData)
-        self.createButton.grid(row=3)
+        self.createButton.grid()
 
     def createInvoiceFrameWidgets(self):
 
         self.invoiceTemplateFilenameString = StringVar()
 
-        # template picker frame
-        self.invoiceTemplatePickerFrame = Frame(self.invoiceFrame, bg="white", width=300)
-        self.invoiceTemplatePickerFrame.grid(padx=5, pady=5)
+        # template frame
+        self.invoiceTemplateFrame = Frame(self.invoiceFrame, bg="white", width=300)
+        self.invoiceTemplateFrame.grid(padx=5, pady=5)
+
+        templateRowNumber = 0
+
+        self.invoiceTemplateFrameTitle = Label(self.invoiceTemplateFrame, text="Template", font="System 11", fg="darkgray")
+        self.invoiceTemplateFrameTitle.grid(row=templateRowNumber, sticky=W, columnspan=2)
+        templateRowNumber += 1
+
+        self.selectInvoiceTemplateButton = Button(self.invoiceTemplateFrame, text="Select", command=self.selectInvoiceTemplate)
+        self.selectInvoiceTemplateButton.grid(row=templateRowNumber)
+
+        # templateRowNumber += 1
+
+        # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
+        # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
+        self.invoicePathString = StringVar()
+        self.invoicePathLabel = Label(self.invoiceTemplateFrame, textvariable=self.invoicePathString, width=32, font="System 11", bg="white smoke")
+        self.invoicePathLabel.grid(row=templateRowNumber, column=1)
 
         # invoice details frame
         self.invoiceDetailsFrame = Frame(self.invoiceFrame, bg="white", width=300)
@@ -246,6 +313,29 @@ class Application:
         self.labelUnitPrice.grid(row=3, sticky=E)
         self.entryUnitPrice = Entry(self.invoiceDetailsFrame, width=5)
         self.entryUnitPrice.grid(row=3, column=1, sticky=W)
+
+        self.timesheetSaveDestinationPathString = StringVar()
+
+        # destination frame
+        self.invoiceSavePathFrame = Frame(self.invoiceFrame, bg="white", width=300)
+        self.invoiceSavePathFrame.grid(padx=5, pady=5)
+
+        templateRowNumber = 0
+
+        self.invoiceDestinationFrameTitle = Label(self.invoiceSavePathFrame, text="Destination", font="System 11", fg="darkgray")
+        self.invoiceDestinationFrameTitle.grid(row=templateRowNumber, sticky=W, columnspan=2)
+        templateRowNumber += 1
+
+        self.selectInvoiceDestinationButton = Button(self.invoiceSavePathFrame, text = "Select", command=self.selectInvoiceDestinationFolder)
+        self.selectInvoiceDestinationButton.grid(row=templateRowNumber)
+
+        # templateRowNumber += 1
+
+        # self.entryTemplatePath = Entry(self.timesheetTemplateFrame, width=25)
+        # self.entryTemplatePath.grid(row=templateRowNumber, column=1)
+        self.invoiceDestinationPathString = StringVar()
+        self.invoiceDestinationPathLabel = Label(self.invoiceSavePathFrame, textvariable=self.invoiceDestinationPathString, width=32, font="System 11", bg="white smoke")
+        self.invoiceDestinationPathLabel.grid(row=templateRowNumber, column=1)
 
 
     def getAllMondays(self, year):
@@ -290,13 +380,35 @@ class Application:
                                                                ("All files", "*.*")))
         if timesheetTemplateFilename:
             try:
-                # print("here it comes: self.settings["template"].set(timesheetTemplateFilename)")
                 self.timesheetTemplateFilenameString.set(timesheetTemplateFilename)
-                self.entryTemplatePath.insert(0,timesheetTemplateFilename)
-                print(timesheetTemplateFilename)
-            except:                     # <- naked except is a bad idea
+                urlParts = timesheetTemplateFilename.rsplit("/", 2)
+                # trimmedTemplatePath = ".../" + urlParts[1] + "/" + urlParts[2]
+                trimmedTemplatePath = ".../" + urlParts[2]
+                self.templatePathString.set(trimmedTemplatePath)
+                print(trimmedTemplatePath)
+            except:
                 showerror("Open Source File", "Failed to read file\n'%s'" % timesheetTemplateFilename)
             return
+
+    def selectTimesheetDestinationFolder(self):
+        timesheetSavingDirectory  = askdirectory(title="Please select a directory")
+
+        if len(timesheetSavingDirectory) > 0:
+            try:
+                self.timesheetSaveDestinationPathString.set(timesheetSavingDirectory)
+                urlParts = timesheetSavingDirectory.rsplit("/", 2)
+                trimmedTemplatePath = ".../" + urlParts[2]
+                self.templateDestinationPathString.set(trimmedTemplatePath)
+                print(timesheetSavingDirectory)
+            except:
+                showerror("Select directory", "Failed to open directory\n'%s'" % timesheetSavingDirectory)
+            return
+
+    def selectInvoiceTemplate(self):
+        return
+
+    def selectInvoiceDestinationFolder(self):
+        return
 
     def createTimesheetWithData(self):
 
