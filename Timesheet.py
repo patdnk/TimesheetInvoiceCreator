@@ -524,7 +524,7 @@ class Application:
         weekEndDay = weekStartDay + datetime.timedelta(days=7)
 
         nameAbbr = ""
-        for word in self.consultantName.split():
+        for word in self.consultantName.get().split():
             nameAbbr += word[0]
 
         timesheetName = "tsheet" + self.clientName.get().lower() + nameAbbr.lower() + "_" + weekStartDay.strftime("%d%m%Y") + "_" + weekEndDay.strftime("%d%m%Y") # "tsheetcsrpd_060415-120415"
