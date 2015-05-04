@@ -11,6 +11,7 @@ from tkinter.messagebox import showerror
 # from decimal import Decimal
 from docx import Document
 from dateutil import parser
+from decimal import Decimal
 from os.path import abspath, expanduser
 
 #todo Add validation before creating timesheet/invoice
@@ -73,6 +74,8 @@ class Application:
 
         self.daysTuple = [("nh_monday",self.entryMondayNH),("nh_tuesday",self.entryTuesdayNH),("nh_wednesday",self.entryWednesdayNH),("nh_thursday",self.entryThursdayNH),("nh_friday",self.entryFridayNH),("nh_saturday",self.entrySaturdayNH),("nh_sunday",self.entrySundayNH),("oh_monday",self.entryMondayOH),("oh_tuesday",self.entryTuesdayOH),("oh_wednesday",self.entryTuesdayOH),("oh_thursday",self.entryThursdayOH),("oh_friday",self.entryFridayOH),("oh_saturday",self.entrySaturdayOH),("oh_sunday",self.entrySundayOH)];
         self.daysPlaceholders = ["monday_date", "tuesday_date", "wednesday_date", "thursday_date", "friday_date", "saturday_date", "sunday_date"]
+
+        self.invoiceEntriesTuple = [("invoice_number",self.entryInvoiceNumber),("invoice_description", self.entryInvoiceDescription),("unit(s)",self.entryUnitsTotal),("unit_price",self.entryUnitPrice)]
 
 
     def createTimesheetWidgets(self):
@@ -240,7 +243,7 @@ class Application:
         self.templateDestinationPathLabel.grid(row=templateRowNumber, column=1)
 
         #add the creation button
-        self.createButton = Button(self.timesheetFrame, text = "Create", command=self.createTimesheetWithData)
+        self.createButton = Button(self.timesheetFrame, text = "Create", command=self.createTimesheet)
         self.createButton.grid(sticky=E)
 
     def createInvoiceFrameWidgets(self):
@@ -288,10 +291,10 @@ class Application:
         self.entryInvoiceDescription.grid(row=detailRowNumber, column=1, sticky=W)
         detailRowNumber += 1
 
-        self.labelUnitsNumber = Label(self.invoiceDetailsFrame, text="Units number", font="System 12")
-        self.labelUnitsNumber.grid(row=detailRowNumber, sticky=E)
-        self.entryUnitsNumber = Entry(self.invoiceDetailsFrame, width=5)
-        self.entryUnitsNumber.grid(row=detailRowNumber, column=1, sticky=W)
+        self.labelUnitsTotal = Label(self.invoiceDetailsFrame, text="Units total", font="System 12")
+        self.labelUnitsTotal.grid(row=detailRowNumber, sticky=E)
+        self.entryUnitsTotal = Entry(self.invoiceDetailsFrame, width=5)
+        self.entryUnitsTotal.grid(row=detailRowNumber, column=1, sticky=W)
         detailRowNumber += 1
 
         self.labelUnitPrice = Label(self.invoiceDetailsFrame, text="Unit price", font="System 12")
@@ -326,6 +329,8 @@ class Application:
         #add the creation button
         invoiceCreateButton = Button(self.invoiceFrame, text = "Create", command=self.createInvoice)
         invoiceCreateButton.grid(sticky=E)
+
+    ###### Timesheet methods ######
 
     def getAllMondays(self, year):
 
@@ -393,54 +398,23 @@ class Application:
                 showerror("Select directory", "Failed to open directory\n'%s'" % timesheetSavingDirectory)
             return
 
-    def selectInvoiceTemplate(self):
-        invoiceTemplateFilename = askopenfilename(filetypes=(("Word 2007 doc files", "*.docx"),
-                                                               ("All files", "*.*")))
-        if invoiceTemplateFilename:
-            try:
-                self.invoiceTemplateFilenameString.set(invoiceTemplateFilename)
-                urlParts = invoiceTemplateFilename.rsplit("/", 2)
-                # trimmedTemplatePath = ".../" + urlParts[1] + "/" + urlParts[2]
-                trimmedTemplatePath = ".../" + urlParts[2]
-                self.invoiceTemplateLabelString.set(trimmedTemplatePath)
-                print(trimmedTemplatePath)
-            except:
-                showerror("Open Source File", "Failed to read file\n'%s'" % timesheetTemplateFilename)
-            return
-
-    def selectInvoiceDestinationFolder(self):
-        timesheetSavingDirectory  = askdirectory(title="Please select a directory")
-        if len(timesheetSavingDirectory) > 0:
-            try:
-                self.invoiceDestinationDirectoryString.set(timesheetSavingDirectory)
-                urlParts = timesheetSavingDirectory.rsplit("/", 2)
-                trimmedTemplatePath = ".../" + urlParts[2]
-                self.invoiceDestinationLabelString.set(trimmedTemplatePath)
-                print(timesheetSavingDirectory)
-            except:
-                showerror("Select directory", "Failed to open directory\n'%s'" % timesheetSavingDirectory)
-            return
-
-    def createTimesheetWithData(self):
+    def createTimesheet(self):
         # self.timesheetDocumentTemplatePath = "/users/patdynek/Documents/Maze Sys Ltd docs/templates/wa_timesheet_template.docx"
         # self.timesheetDocumentTemplatePath = abspath(expanduser("~/") + 'templates/wa_timesheet_template.docx')
         self.openTimesheetDocumentTemplate()
         self.insertHoursValues(self.daysTuple)
         self.insertDatesStartingFrom(self.dateSelected.get())
         self.insertTimesheetDetails()
-        self.saveTimeSheetDocument()
-
-    def createInvoice(self):
-        return
+        self.saveTimesheetDocument()
 
     #open timesheet document
     def openTimesheetDocumentTemplate(self):
-        self.document = Document(self.timesheetTemplateFilenameString.get())
+        self.timesheetDocument = Document(self.timesheetTemplateFilenameString.get())
 
     #insert hours values
     def insertHoursValues(self,daysTuple):
         #insert hours from entries
-        for table in self.document.tables:
+        for table in self.timesheetDocument.tables:
             for cell in table._cells:
 
                 for (phDay,entryDay) in daysTuple:
@@ -464,7 +438,7 @@ class Application:
 
 
         if (totalNormalHours >= 0 or totalOvertimeHours >= 0):
-            for table in self.document.tables:
+            for table in self.timesheetDocument.tables:
                 for cell in table._cells:
                     if "nh_total" in cell.text:
                         for paragraph in cell.paragraphs:
@@ -480,7 +454,7 @@ class Application:
                                 paragraph.text = "-"
 
     def insertTimesheetDetails(self):
-        for table in self.document.tables:
+        for table in self.timesheetDocument.tables:
                 for cell in table._cells:
                     if "consultant_name" in cell.text:
                         for paragraph in cell.paragraphs:
@@ -510,7 +484,7 @@ class Application:
         self.dates = list(zip(self.daysPlaceholders, weekDays))
 
         if weekDays.__len__() == 7:
-            for table in self.document.tables:
+            for table in self.timesheetDocument.tables:
                 for cell in table._cells:
                         for (phDay,dayDate) in self.dates:
                             if phDay in cell.text:
@@ -519,7 +493,7 @@ class Application:
                                     paragraph.text = dayDate.strftime("%d/%m/%Y")
 
     #save timesheet document
-    def saveTimeSheetDocument(self):
+    def saveTimesheetDocument(self):
         weekStartDay = parser.parse(self.dateSelected.get())
         weekEndDay = weekStartDay + datetime.timedelta(days=7)
 
@@ -527,10 +501,111 @@ class Application:
         for word in self.consultantName.get().split():
             nameAbbr += word[0]
 
-        timesheetName = "tsheet" + self.clientName.get().lower() + nameAbbr.lower() + "_" + weekStartDay.strftime("%d%m%Y") + "_" + weekEndDay.strftime("%d%m%Y") # "tsheetcsrpd_060415-120415"
+        timesheetName = "tsheet" + self.clientName.get().lower() + nameAbbr.lower() + "_" + weekStartDay.strftime("%d%m%y") + "-" + weekEndDay.strftime("%d%m%Y") # "tsheetcsrpd_060415-120415"
         documentSavePath = self.timesheetDestinationDirectoryString.get() + "/" + timesheetName + ".docx"
         # self.document.save("/users/patdynek/Documents/Maze Sys Ltd docs/templates/saved_timesheet.docx")
-        self.document.save(documentSavePath)
+        self.timesheetDocument.save(documentSavePath)
+
+
+    ###### Invoice methods ######
+
+    def selectInvoiceTemplate(self):
+        invoiceTemplateFilename = askopenfilename(filetypes=(("Word 2007 doc files", "*.docx"),
+                                                               ("All files", "*.*")))
+        if invoiceTemplateFilename:
+            try:
+                self.invoiceTemplateFilenameString.set(invoiceTemplateFilename)
+                urlParts = invoiceTemplateFilename.rsplit("/", 2)
+                # trimmedTemplatePath = ".../" + urlParts[1] + "/" + urlParts[2]
+                trimmedTemplatePath = ".../" + urlParts[2]
+                self.invoiceTemplateLabelString.set(trimmedTemplatePath)
+                print(trimmedTemplatePath)
+            except:
+                showerror("Open Source File", "Failed to read file\n'%s'" % timesheetTemplateFilename)
+            return
+
+    def selectInvoiceDestinationFolder(self):
+        timesheetSavingDirectory  = askdirectory(title="Please select a directory")
+        if len(timesheetSavingDirectory) > 0:
+            try:
+                self.invoiceDestinationDirectoryString.set(timesheetSavingDirectory)
+                urlParts = timesheetSavingDirectory.rsplit("/", 2)
+                trimmedTemplatePath = ".../" + urlParts[2]
+                self.invoiceDestinationLabelString.set(trimmedTemplatePath)
+                print(timesheetSavingDirectory)
+            except:
+                showerror("Select directory", "Failed to open directory\n'%s'" % timesheetSavingDirectory)
+            return
+
+    #open invoice document
+    def openInvoiceDocumentTemplate(self):
+        self.invoiceDocument = Document(self.invoiceTemplateFilenameString.get())
+
+    def createInvoice(self):
+        self.openInvoiceDocumentTemplate()
+        self.insertInvoiceDetails(self.invoiceEntriesTuple)
+        self.saveInvoiceDocument()
+
+    def saveInvoiceDocument(self):
+        invoiceName = "Invoice_MSLTD_" + self.entryInvoiceNumber.get() + "_" + datetime.datetime.now().strftime("%d%m%y")
+        documentSavePath = self.invoiceDestinationDirectoryString.get() + "/" + invoiceName + ".docx"
+        self.invoiceDocument.save(documentSavePath)
+
+    def insertInvoiceDetails(self,detailsTuple):
+
+        weekStartDay = parser.parse(self.dateSelected.get())
+        weekEndDay = weekStartDay + datetime.timedelta(days=7)
+
+        unitsTotal = 0
+        if self.entryUnitsTotal.get():
+            # totalUnits = int(self.entryUnitsTotal.get())
+            unitsTotal = int(self.entryUnitsTotal.get()) * int(self.entryUnitPrice.get())
+            vatTotal = unitsTotal * 0.20
+            grossTotal = unitsTotal * 1.20
+            print("unitsTotal: " + str(unitsTotal) + " | vatTotal: " + str(vatTotal) + " | grossTotal: " + str(grossTotal))
+
+        for table in self.invoiceDocument.tables:
+            for cell in table._cells:
+
+                for (phDay,invoiceDetailsEntry) in detailsTuple:
+                    if phDay in cell.text:
+                        for paragraph in cell.paragraphs:
+                            print(paragraph.text)
+                            if invoiceDetailsEntry.get():
+                                paragraph.text = invoiceDetailsEntry.get()
+                            else:
+                                paragraph.text = "-"
+
+                if "invoice_date" in cell.text:
+                    for paragraph in cell.paragraphs:
+                        print(paragraph.text)
+                        paragraph.text = datetime.datetime.now().strftime("%d %b %Y")
+
+                if "invoice_period" in cell.text:
+                    for paragraph in cell.paragraphs:
+                        print(paragraph.text)
+                        paragraph.text = weekStartDay.strftime("%d %b %y") + "   TO   " + weekEndDay.strftime("%d %b %y")
+
+                if "units_total" in cell.text:
+                    for paragraph in cell.paragraphs:
+                        print(paragraph.text + " " + str(format(Decimal(unitsTotal),".2f")))
+                        paragraph.text = str(format(Decimal(unitsTotal),".2f"))
+
+                if "sub_total" in cell.text:
+                    for paragraph in cell.paragraphs:
+                        print(paragraph.text + " " + str(format(Decimal(unitsTotal),".2f")))
+                        paragraph.text = str(format(Decimal(unitsTotal),".2f"))
+
+                if "vat_total" in cell.text:
+                    for paragraph in cell.paragraphs:
+                        print(paragraph.text + " " + str(format(Decimal(vatTotal),".2f")))
+                        paragraph.text = str(format(Decimal(vatTotal),".2f"))
+
+                if "gross_total" in cell.text:
+                    for paragraph in cell.paragraphs:
+                        print(paragraph.text + " " + str(format(Decimal(grossTotal),".2f")))
+                        paragraph.text = str(format(Decimal(grossTotal),".2f"))
+
 
 
 #####################
